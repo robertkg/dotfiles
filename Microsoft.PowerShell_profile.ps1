@@ -4,6 +4,13 @@
 Set-PSReadlineOption -BellStyle None
 
 # Functions
+
+function global:prompt {
+    # https://stackoverflow.com/questions/39186373/how-can-i-use-tilde-in-the-powershell-prompt
+    $regex = [regex]::Escape($HOME) + "(\\.*)*$"
+    "$($executionContext.SessionState.Path.CurrentLocation.Path -replace $regex, '~$1')$('>' * ($nestedPromptLevel + 1)) "
+}
+
 function Get-PersonalLmCerts {
     Get-ChildItem -Path "Cert:\LocalMachine\My" |
     Format-Table Subject, Thumbprint, NotAfter -AutoSize
@@ -28,6 +35,22 @@ function Update-PsProfile {
     }
 }
 
+function Start-Firefox ($params) {
+    $32bitDir = "C:\Program Files\Mozilla Firefox\firefox.exe"
+    $64bitDir = "C:\Program Files (x86)\Mozilla Firefox\firefox.exe"
+
+    if (Test-Path -Path $32bitDir) {
+        Start-Process $32bitDir $params
+    }
+    elseif (Test-Path -Path $64bitDir) {
+        Start-Process $64bitDir $params
+    }
+    else {
+        Write-Warning -Message "No Firefox installation found. Opening in default web browser..."
+        Start-Process $params
+    }
+}
+
 function Get-AliasCmdlet ($CmdletName) {
     Get-Alias |
     Where-Object -FilterScript { $_.Definition -like $CmdletName } |
@@ -39,8 +62,8 @@ Set-Alias -Name "touch" -Value New-Item
 Set-Alias -Name "grep" -Value Select-String
 Set-Alias -Name "im" -Value Import-Module
 Set-Alias -Name "certlm" -Value Get-PersonalLmCerts
-Set-Alias -Name "ff" -Value "%PROGRAMFILES(X86)%\Mozilla Firefox\firefox.exe"
-Set-Alias -Name "firefox" -Value "%PROGRAMFILES(X86)%\Mozilla Firefox\firefox.exe"
+Set-Alias -Name "ff" -Value Start-Firefox
+Set-Alias -Name "firefox" -Value Start-Firefox
 
 # PSReadline key handlers
 
