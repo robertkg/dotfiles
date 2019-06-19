@@ -1,21 +1,24 @@
 # Modules
+Import-Module -Name PSReadline
 
-# PSReadline
+# PSReadline-specific settings
 Set-PSReadlineOption -BellStyle None
 
 # Functions
-
+## Remove PS prefix in terminal and set home dir prompt to ~
 function global:prompt {
     # https://stackoverflow.com/questions/39186373/how-can-i-use-tilde-in-the-powershell-prompt
     $regex = [regex]::Escape($HOME) + "(\\.*)*$"
     "$($executionContext.SessionState.Path.CurrentLocation.Path -replace $regex, '~$1')$('>' * ($nestedPromptLevel + 1)) "
 }
 
+## List all certificates in local machine personal store. Format as it's a one-time use
 function Get-PersonalLmCerts {
     Get-ChildItem -Path "Cert:\LocalMachine\My" |
     Format-Table Subject, Thumbprint, NotAfter -AutoSize
 }
 
+## Update current user's PS profile with a given profile file
 function Update-PsProfile {
     [Cmdletbinding(SupportsShouldProcess)]
     param (
@@ -35,6 +38,7 @@ function Update-PsProfile {
     }
 }
 
+## Launch/open a new tab of Firefox 32/64, depending on which version is installed
 function Start-Firefox ($params) {
     $32bitDir = "C:\Program Files\Mozilla Firefox\firefox.exe"
     $64bitDir = "C:\Program Files (x86)\Mozilla Firefox\firefox.exe"
@@ -51,6 +55,7 @@ function Start-Firefox ($params) {
     }
 }
 
+## Lookup aliases based on cmdlet name
 function Get-AliasCmdlet ($CmdletName) {
     Get-Alias |
     Where-Object -FilterScript { $_.Definition -like $CmdletName } |
@@ -66,7 +71,6 @@ Set-Alias -Name "ff" -Value Start-Firefox
 Set-Alias -Name "firefox" -Value Start-Firefox
 
 # PSReadline key handlers
-
 ## Resolve the full path of the given relative path
 ## Source: https://github.com/psconfeu/2019/blob/master/sessions/Anthony%20Allen/PSReadline/PSReadline.zip
 Set-PSReadLineKeyHandler -Chord 'Ctrl+x,Ctrl+p' -Description "Resolves full path of the given relative path" -ScriptBlock {
