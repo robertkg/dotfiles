@@ -69,7 +69,7 @@ Set-Alias -Name "im" -Value Import-Module
 Set-Alias -Name "certlm" -Value Get-PersonalLmCerts
 Set-Alias -Name "ff" -Value Start-Firefox
 Set-Alias -Name "firefox" -Value Start-Firefox
-Set-Alias -Name "eps" -Value Enter-PSSession
+Set-Alias -Name "esn" -Value Enter-PSSession
 
 # PSReadline key handlers
 ## Resolve the full path of the given relative path
