@@ -2,8 +2,8 @@ using namespace System.Management.Automation
 using namespace System.Management.Automation.Language
 
 #region Module
-Import-Module posh-git
-Import-Module "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
+# Import-Module posh-git
+# Import-Module "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
 #endregion Module
 
 #region Prompt
