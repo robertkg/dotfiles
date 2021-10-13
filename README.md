@@ -1,7 +1,9 @@
 # ps-profile
-My PowerShell profile.
 
-To import the profile, run:
-```
-.\Import-Profile.ps1
+PowerShell profile and additional config.
+
+Import profile with:
+
+```powershell
+.\profile.ps1
 ```
