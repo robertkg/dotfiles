@@ -1,9 +1,11 @@
 using namespace System.Management.Automation
 using namespace System.Management.Automation.Language
 
+$ProgressPreference = 'SilentlyContinue'
+
 #region Module
-# Import-Module posh-git
-# Import-Module "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
+#Import-Module posh-git
+#Import-Module "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
 #endregion Module
 
 #region Prompt
@@ -104,8 +106,8 @@ function Get-AliasCmdlet ($CmdletName) {
 #endregion Function
 
 #region Aliases
-Set-Alias -Name 'vim' -Value 'C:\tools\neovim\Neovim\bin\nvim.exe'
-Set-Alias -Name 'vi' -Value 'C:\tools\neovim\Neovim\bin\nvim.exe'
+Set-Alias -Name 'vim' -Value nvim.exe
+Set-Alias -Name 'vi' -Value nvim.exe
 Set-Alias -Name 'which' -Value Get-Command
 Set-Alias -Name 'touch' -Value New-Item
 Set-Alias -Name 'grep' -Value Select-String
@@ -113,10 +115,13 @@ Set-Alias -Name 'im' -Value Import-Module
 Set-Alias -Name 'esn' -Value Enter-PSSession
 Set-Alias -Name 'ls' -Value Get-ChildItemColor -Option AllScope -Force
 Set-Alias -Name 'dir' -Value Get-ChildItemColor -Option AllScope -Force
+Set-Alias -Name 'top' -Value ntop.exe
+Set-Alias -Name 'htop' -Value ntop.exe
+Set-Alias -Name 'sudo' -Value csudo.cmd
 #endregion
 
 #region PSReadLine
-Set-PSReadlineOption -BellStyle None
+Set-PSReadLineOption -BellStyle None
 Set-PSReadLineOption -AddToHistoryHandler {
     param([string]$line)
     $sensitive = 'password|asplaintext|token|key|secret'
@@ -429,33 +434,6 @@ Set-PSReadLineKeyHandler -Key Alt+a `
 }
 #endregion SelectCommandArguments
 
-#region CaptureScreen
-# https://github.com/PowerShell/PSReadLine/blob/master/PSReadLine/SamplePSReadLineProfile.ps1
-# CaptureScreen is good for blog posts or email showing a transaction
-# of what you did when asking for help or demonstrating a technique.
-Set-PSReadLineKeyHandler -Chord 'Ctrl+d,Ctrl+c' -Function CaptureScreen
-#endregion CaptureScreen
-
-#region SaveInHistory
-# https://github.com/PowerShell/PSReadLine/blob/master/PSReadLine/SamplePSReadLineProfile.ps1
-# Sometimes you enter a command but realize you forgot to do something else first.
-# This binding will let you save that command in the history so you can recall it,
-# but it doesn't actually execute.  It also clears the line with RevertLine so the
-# undo stack is reset - though redo will still reconstruct the command line.
-Set-PSReadLineKeyHandler -Key Alt+w `
-    -BriefDescription SaveInHistory `
-    -LongDescription 'Save current line in history but do not execute' `
-    -ScriptBlock {
-    param($key, $arg)
-
-    $line = $null
-    $cursor = $null
-    [Microsoft.PowerShell.PSConsoleReadLine]::GetBufferState([ref]$line, [ref]$cursor)
-    [Microsoft.PowerShell.PSConsoleReadLine]::AddToHistory($line)
-    [Microsoft.PowerShell.PSConsoleReadLine]::RevertLine()
-}
-#endregion SaveInHistory
-
 #region ExpandAlias
 # https://github.com/PowerShell/PSReadLine/blob/master/PSReadLine/SamplePSReadLineProfile.ps1
 # This example will replace any aliases on the command line with the resolved commands, using the same keyboard shortcut as vscode
@@ -495,41 +473,4 @@ Set-PSReadLineKeyHandler -Key 'Alt+F' `
 }
 #endregion ExpandAlias
 
-#region CommandHelp
-# https://github.com/PowerShell/PSReadLine/blob/master/PSReadLine/SamplePSReadLineProfile.ps1
-# F1 for help on the command line - naturally
-Set-PSReadLineKeyHandler -Key F1 `
-    -BriefDescription CommandHelp `
-    -LongDescription 'Open the help window for the current command' `
-    -ScriptBlock {
-    param($key, $arg)
-
-    $ast = $null
-    $tokens = $null
-    $errors = $null
-    $cursor = $null
-    [Microsoft.PowerShell.PSConsoleReadLine]::GetBufferState([ref]$ast, [ref]$tokens, [ref]$errors, [ref]$cursor)
-
-    $commandAst = $ast.FindAll( {
-            $node = $args[0]
-            $node -is [CommandAst] -and
-            $node.Extent.StartOffset -le $cursor -and
-            $node.Extent.EndOffset -ge $cursor
-        }, $true) | Select-Object -Last 1
-
-    if ($commandAst -ne $null) {
-        $commandName = $commandAst.GetCommandName()
-        if ($commandName -ne $null) {
-            $command = $ExecutionContext.InvokeCommand.GetCommand($commandName, 'All')
-            if ($command -is [AliasInfo]) {
-                $commandName = $command.ResolvedCommandName
-            }
-
-            if ($commandName -ne $null) {
-                Get-Help $commandName -ShowWindow 
-            }
-        }
-    }
-}
-#endregion CommandHelp
 #endregion PSReadLine
