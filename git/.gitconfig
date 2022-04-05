@@ -1,0 +1,16 @@
+[alias]
+    a = add
+    b = branch
+    cb = checkout -b 
+    d = diff
+    g = grep
+    l = log --graph --topo-order --abbrev-commit --date=short --decorate --all --boundary --pretty=format:'%Cgreen%ad %Cred%h%Creset -%C(yellow)%d%Creset %s %Cblue[%cn]%Creset'
+    lg = log --graph
+    lgo = log --graph --oneline
+    o = checkout
+    p = pull
+    pu = push -u origin HEAD
+[color]
+    ui = auto
+[help]
+    autocorrect = 10
