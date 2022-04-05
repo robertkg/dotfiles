@@ -1,0 +1,25 @@
+{
+    "codeLens.enable": true,
+    "coc.preferences.formatOnType": true,
+    "coc.preferences.formatOnSaveFiletypes": [
+        "powershell",
+        "markdown"
+    ],
+    "powershell.integratedConsole.showOnStartup": false,
+    "powershell.codeFormatting.autoCorrectAliases": true,
+    "powershell.integratedConsole.focusConsoleOnExecute": false,
+    "powershell.sideBar.CommandExplorerVisibility": false,
+    "powershell.codeFormatting.useConstantStrings": true,
+    "powershell.scriptAnalysis.enable": true,
+    "powershell.codeFormatting.whitespaceBeforeOpenBrace": true,
+    "powershell.codeFormatting.whitespaceBeforeOpenParen": true,
+    "powershell.codeFormatting.whitespaceAroundOperator": true,
+    "powershell.codeFormatting.whitespaceAfterSeparator": true,
+    "powershell.codeFormatting.whitespaceInsideBrace": true,
+    "powershell.codeFormatting.whitespaceBetweenParameters": true,
+    "powershell.codeFormatting.addWhitespaceAroundPipe": true,
+    "powershell.codeFormatting.trimWhitespaceAroundPipe": true,
+    "powershell.codeFormatting.ignoreOneLineBlock": true,
+    "powershell.codeFormatting.useCorrectCasing": true,
+    "powershell.codeFormatting.alignPropertyValuePairs": true
+}
