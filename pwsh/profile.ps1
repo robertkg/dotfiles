@@ -1,103 +1,35 @@
 using namespace System.Management.Automation
 using namespace System.Management.Automation.Language
 
-$ProgressPreference = 'SilentlyContinue'
+# Debugging
+#$sw = [System.Diagnostics.Stopwatch]::StartNew()
 
 #region Module
-#Import-Module posh-git
-#Import-Module "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
+# ...
 #endregion Module
 
-#region Prompt
 function prompt {
-    # [username@machine] ~\myfolder:
+    # [user@machine ~]$
     # https://docs.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences
+    #$regex = [regex]::Escape($HOME) + '(\\.*)*$'
     $esc = [char]27
-    $regex = [regex]::Escape($HOME) + '(\\.*)*$'
-    "$ESC[32m[$(($env:USERNAME).ToLower())@$(($env:COMPUTERNAME).ToLower())]$esc[0m $($executionContext.SessionState.Path.CurrentLocation.Path -replace $regex, '~$1'): "
+    $dir = if ($PWD.Path -eq $HOME) { '~' } else { Split-Path -Leaf $PWD.Path }
+    $isRoot = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]'Administrator')
+    $suffix = if ($isRoot) { '#' } else { '$' }
+    "[$ESC[32m$(($env:USERNAME).ToLower())@$(($env:COMPUTERNAME).ToLower())$esc[0m $($dir)]$suffix "
 }
 #endregion Prompt
 
 #region Function
-# List all certificates in local machine personal store. Format as it's a one-time use
-function Get-CertificateExpiry {
-    [CmdletBinding()]
-    param (
-        [Parameter(Mandatory = $true)]
-        [string[]] $Cn,
-        [Parameter(Mandatory = $true)]
-        [System.Management.Automation.Runspaces.PSSession] $Session
-    )
+function .. { Set-Location .. }
 
-    $certificates = Invoke-Command -Session $Session -ScriptBlock {
-        $certs = Get-ChildItem -Path 'Cert:\LocalMachine\' -Recurse | Where-Object { $_.Subject -like "*$Using:Cn*" }
-        return $certs
-    }
+function links { sudo $HOME\.config\links.ps1 }
 
-    return ($certificates | Select-Object Thumbprint, FriendlyName, NotBefore, NotAfter -Unique | Format-Table -AutoSize -Wrap)
+function tree ($Path = '.') {
+    Write-Output $Path
+    C:\WINDOWS\system32\tree.com /F /A $Path | Select-Object -Skip 3
 }
 
-function Get-SslThumbprint {
-    param(
-        [Parameter(
-            Position = 0,
-            Mandatory = $true,
-            ValueFromPipeline = $true,
-            ValueFromPipelineByPropertyName = $true)
-        ]
-        [Alias('FullName')]
-        [String]$Url
-    )
-
-    Add-Type @'
-        using System.Net;
-        using System.Security.Cryptography.X509Certificates;
-            public class IDontCarePolicy : ICertificatePolicy {
-            public IDontCarePolicy() {}
-            public bool CheckValidationResult(
-                ServicePoint sPoint, X509Certificate cert,
-                WebRequest wRequest, int certProb) {
-                return true;
-            }
-        }
-'@
-    [System.Net.ServicePointManager]::CertificatePolicy = New-Object IDontCarePolicy
-
-    # Need to connect using simple GET operation for this to work
-    Invoke-RestMethod -Uri $URL -Method Get | Out-Null
-
-    $endpointRequest = [System.Net.Webrequest]::Create("$URL")
-    $sslThumbprint = $endpointRequest.ServicePoint.Certificate.GetCertHashString()
-
-    return [PSCustomObject] @{
-        Thumbprint = $sslThumbprint
-        Issuer     = $endpointRequest.ServicePoint.Certificate.Issuer
-        Subject    = $endpointRequest.ServicePoint.Certificate.Subject
-    }
-}
-
-
-# Update current user's PS profile with a given profile file
-function Update-PsProfile {
-    [Cmdletbinding(SupportsShouldProcess)]
-    param (
-        [Parameter()]
-        [string]
-        $ProfileTemplate = 'C:\Git\ps-profile\Microsoft.PowerShell_profile.ps1'
-    )
-
-    if (-not (Test-Path $ProfileTemplate)) {
-        throw "Profile template $ProfileTemplate was not found."
-    }
-
-    $newProfile = (Get-Content -Raw -Path $ProfileTemplate -ErrorAction Stop)
-
-    if ($PSCmdlet.ShouldProcess($profile, "Updating profile for $(whoami) with profile $ProfileTemplate")) {
-        Set-Content -Path $profile -Value $newProfile -Force
-    }
-}
-
-# Lookup aliases based on cmdlet name
 function Get-AliasCmdlet ($CmdletName) {
     Get-Alias |
     Where-Object -FilterScript { $_.Definition -like $CmdletName } |
@@ -105,7 +37,7 @@ function Get-AliasCmdlet ($CmdletName) {
 }
 #endregion Function
 
-#region Aliases
+#region Alias
 Set-Alias -Name 'vim' -Value nvim.exe
 Set-Alias -Name 'vi' -Value nvim.exe
 Set-Alias -Name 'which' -Value Get-Command
@@ -113,21 +45,21 @@ Set-Alias -Name 'touch' -Value New-Item
 Set-Alias -Name 'grep' -Value Select-String
 Set-Alias -Name 'im' -Value Import-Module
 Set-Alias -Name 'esn' -Value Enter-PSSession
-Set-Alias -Name 'ls' -Value Get-ChildItemColor -Option AllScope -Force
-Set-Alias -Name 'dir' -Value Get-ChildItemColor -Option AllScope -Force
+Set-Alias -Name 'ls' -Value Get-ChildItem -Option AllScope -Force
+Set-Alias -Name 'dir' -Value Get-ChildItem -Option AllScope -Force
 Set-Alias -Name 'top' -Value ntop.exe
 Set-Alias -Name 'htop' -Value ntop.exe
-Set-Alias -Name 'sudo' -Value csudo.cmd
+Set-Alias -Name 'sudo' -Value gsudo
+Set-Alias -Name su -Value gsudo
 #endregion
 
 #region PSReadLine
 Set-PSReadLineOption -BellStyle None
-Set-PSReadLineOption -AddToHistoryHandler {
-    param([string]$line)
-    $sensitive = 'password|asplaintext|token|key|secret'
-    return ($line -notmatch $sensitive)
-}
-Set-PSReadLineOption 
+# Set-PSReadLineOption -AddToHistoryHandler {
+#     param([string]$line)
+#     $sensitive = 'password|asplaintext|token|key|secret'
+#     return ($line -notmatch $sensitive)
+# }
 
 #region ExpandPath
 # https://github.com/psconfeu/2019/blob/master/sessions/Anthony%20Allen/PSReadline/PSReadline.zip
@@ -473,4 +405,7 @@ Set-PSReadLineKeyHandler -Key 'Alt+F' `
 }
 #endregion ExpandAlias
 
-#endregion PSReadLine
+# #endregion PSReadLine
+
+# $sw.Stop()
+# "Loading profile took $($sw.ElapsedMilliseconds) ms"
