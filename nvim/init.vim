@@ -47,7 +47,7 @@ source ~/.config/nvim/plugins/dracula.vim
 call plug#end()
 
 " Set PowerShell as default shell
-let &shell = has('win32') ? 'powershell' : 'pwsh'
+let &shell = has('win32') ? 'pwsh' : 'powershell'
 set shellquote= shellpipe=\| shellxquote=
 set shellcmdflag=-NoLogo\ -NoProfile\ -ExecutionPolicy\ RemoteSigned\ -Command
 set shellredir=\|\ Out-File\ -Encoding\ UTF8
